@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弾幕ゲーム</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="left-pane">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        <div class="right-pane">
+            <div class="info-section">
+                <h2>スコア</h2>
+                <div id="score" class="score-value">0</div>
+            </div>
+            <div class="info-section">
+                <h2>ハイスコア</h2>
+                <div id="highScores" class="high-scores">
+                    <div>1位: <span>0</span></div>
+                    <div>2位: <span>0</span></div>
+                    <div>3位: <span>0</span></div>
+                </div>
+            </div>
+            <button id="pauseBtn" class="btn">ポーズ</button>
+        </div>
+    </div>
+
+    <div id="gameOverlay" class="overlay hidden">
+        <div class="overlay-content">
+            <h1 id="overlayTitle"></h1>
+            <p id="overlayMessage"></p>
+            <button id="restartBtn" class="btn btn-large">リスタート</button>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
