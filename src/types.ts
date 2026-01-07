@@ -91,4 +91,6 @@ export interface GameConfig {
   enemyBulletDirections: number;
   /** 敵を1機倒したときの獲得スコア */
   scorePerEnemy: number;
+  /** サウンドの音量（0.0〜1.0） */
+  soundVolume: number;
 }

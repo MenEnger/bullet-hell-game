@@ -24,4 +24,7 @@ export const CONFIG: GameConfig = {
 
   // スコア関連の設定
   scorePerEnemy: 100,          // 敵を1機倒したときの獲得スコア
+
+  // サウンド関連の設定
+  soundVolume: 0.7,            // サウンドの音量（0.0～1.0）
 };

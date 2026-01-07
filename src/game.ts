@@ -3,10 +3,11 @@
  * ゲームのすべてのロジック（プレイヤー、敵、弾丸の管理）を担当
  */
 
-import type { Player, Enemy, Bullet, GameState, Vector2D } from './types';
+import type { Player, Enemy, Bullet, GameState } from './types';
 import { CONFIG } from './config';
 import { checkCollision, clamp, distance, getDirectionVector } from './utils';
 import { saveHighScore, updateHighScoresDisplay } from './storage';
+import * as Audio from './audio';
 
 export class Game {
   /** Canvasエレメント */
@@ -108,6 +109,23 @@ export class Game {
     // リスタートボタン
     const restartBtn = document.getElementById('restartBtn');
     restartBtn?.addEventListener('click', () => this.restart());
+
+    // 続けるボタン（ポーズ時のみ表示）
+    const continueBtn = document.getElementById('continueBtn');
+    continueBtn?.addEventListener('click', () => this.togglePause());
+
+    // ミュートボタン
+    const muteBtn = document.getElementById('muteBtn');
+    if (muteBtn) {
+      // 初期状態のボタンテキストを設定
+      muteBtn.textContent = Audio.isMuted() ? 'ミュート解除' : 'ミュート';
+      
+      // クリックイベント
+      muteBtn.addEventListener('click', () => {
+        const isMuted = Audio.toggleMute();
+        muteBtn.textContent = isMuted ? 'ミュート解除' : 'ミュート';
+      });
+    }
   }
 
   /**
@@ -117,7 +135,7 @@ export class Game {
   private togglePause(): void {
     if (this.state === 'playing') {
       this.state = 'paused';
-      this.showOverlay('ポーズ', 'スコア: ' + this.score);
+      this.showOverlay('ポーズ', 'スコア: ' + this.score, true);
     } else if (this.state === 'paused') {
       this.state = 'playing';
       this.hideOverlay();
@@ -138,6 +156,10 @@ export class Game {
     this.updateScore();
     this.state = 'playing';
     this.hideOverlay();
+    
+    // BGMを再開
+    Audio.startBGM();
+    
     this.gameLoop();
   }
 
@@ -203,6 +225,9 @@ export class Game {
       isPlayerBullet: true,
       targetEnemy: closestEnemy,
     });
+
+    // 発射音を再生
+    Audio.playShoot();
   }
 
   /**
@@ -366,6 +391,9 @@ export class Game {
           this.enemies.splice(j, 1);
           this.score += CONFIG.scorePerEnemy;
           this.updateScore();
+          
+          // 着弾音を再生
+          Audio.playHit();
           break;
         }
       }
@@ -394,6 +422,9 @@ export class Game {
       if (checkCollision(bullet, this.player)) {
         this.enemyBullets.splice(i, 1);
         this.player.lives--;
+        
+        // 被弾音を再生
+        Audio.playDamage();
 
         // 残機が0になったらゲームオーバー
         if (this.player.lives <= 0) {
@@ -414,9 +445,14 @@ export class Game {
    */
   private gameOver(): void {
     this.state = 'gameOver';
+    
+    // BGMを停止してゲームオーバー音を再生
+    Audio.stopBGM();
+    Audio.playGameOver();
+    
     const highScores = saveHighScore(this.score);
     updateHighScoresDisplay(highScores);
-    this.showOverlay('ゲームオーバー', 'スコア: ' + this.score);
+    this.showOverlay('ゲームオーバー', 'スコア: ' + this.score, false);
   }
 
   /**
@@ -425,25 +461,42 @@ export class Game {
    */
   private gameClear(): void {
     this.state = 'gameClear';
+    
+    // BGMを停止してゲームクリア音を再生
+    Audio.stopBGM();
+    Audio.playGameClear();
+    
     const livesBonus = this.player.lives * 100;
     const finalScore = this.score + livesBonus;
     const highScores = saveHighScore(finalScore);
     updateHighScoresDisplay(highScores);
-    this.showOverlay('ゲームクリア！', `スコア: ${this.score} + ボーナス: ${livesBonus} = ${finalScore}`);
+    this.showOverlay('ゲームクリア！', `スコア: ${this.score} + ボーナス: ${livesBonus} = ${finalScore}`, false);
   }
 
   /**
    * オーバーレイを表示
    * @param title - タイトル文字列
    * @param message - メッセージ文字列
+   * @param showContinue - 続けるボタンを表示するか（ポーズ時のtrue）
    */
-  private showOverlay(title: string, message: string): void {
+  private showOverlay(title: string, message: string, showContinue: boolean = false): void {
     const overlay = document.getElementById('gameOverlay');
     const titleEl = document.getElementById('overlayTitle');
     const messageEl = document.getElementById('overlayMessage');
+    const continueBtn = document.getElementById('continueBtn');
 
     if (titleEl) titleEl.textContent = title;
     if (messageEl) messageEl.textContent = message;
+    
+    // 続けるボタンの表示/非表示
+    if (continueBtn) {
+      if (showContinue) {
+        continueBtn.classList.remove('hidden');
+      } else {
+        continueBtn.classList.add('hidden');
+      }
+    }
+    
     if (overlay) overlay.classList.remove('hidden');
   }
 
@@ -452,6 +505,13 @@ export class Game {
    */
   private hideOverlay(): void {
     const overlay = document.getElementById('gameOverlay');
+    const continueBtn = document.getElementById('continueBtn');
+    
+    // 続けるボタンも確実に非表示にする
+    if (continueBtn) {
+      continueBtn.classList.add('hidden');
+    }
+    
     if (overlay) overlay.classList.add('hidden');
   }
 
@@ -546,6 +606,9 @@ export class Game {
 
     // ゲーム開始時刻を記録
     this.gameStartTime = Date.now();
+    
+    // BGMを開始
+    Audio.startBGM();
 
     // ゲームループを開始
     this.gameLoop();

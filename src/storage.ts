@@ -1,4 +1,9 @@
 const HIGH_SCORES_KEY = 'bulletHellHighScores';
+const MUTE_STATE_KEY = 'bulletHellMuteState';
+
+/**
+ * ハイスコア関連の関数
+ */
 
 export function getHighScores(): number[] {
   const stored = localStorage.getItem(HIGH_SCORES_KEY);
@@ -32,4 +37,25 @@ export function updateHighScoresDisplay(scores: number[]): void {
       spans[index].textContent = score.toString();
     }
   });
+}
+
+/**
+ * ミュート状態関連の関数
+ */
+
+/**
+ * localStorageからミュート状態を取得
+ * @returns ミュート状態（デフォルトはfalse）
+ */
+export function getMuteState(): boolean {
+  const stored = localStorage.getItem(MUTE_STATE_KEY);
+  return stored === 'true';
+}
+
+/**
+ * ミュート状態をlocalStorageに保存
+ * @param muted - ミュート状態
+ */
+export function saveMuteState(muted: boolean): void {
+  localStorage.setItem(MUTE_STATE_KEY, muted.toString());
 }
